@@ -1,0 +1,85 @@
+Lesson 3 – Data Transformation with Power Query (Part 1)
+1. What is the purpose of the "Applied Steps" pane in Power Query?
+
+The Applied Steps pane shows every transformation applied to the data, step by step, and allows you to edit or remove steps.
+
+2. How do you remove duplicate rows in Power Query?
+
+Select the column(s), then click Remove Rows → Remove Duplicates.
+
+3. What does the "Filter" icon do in Power Query?
+
+It allows you to filter data by values, text, numbers, or dates.
+
+4. How would you rename a column from "CustID" to "CustomerID"?
+
+Right-click the column name and choose Rename, then type CustomerID.
+
+5. What happens if you click "Close & Apply" in Power Query?
+
+All changes are saved and the transformed data is loaded into Power BI.
+
+6. How would you handle null values in the Price column?
+
+Replace null values using Replace Values or remove rows containing nulls.
+
+DAX002 / Power Query (M-code)
+7. Remove all rows where Quantity is less than 2.
+Table.SelectRows(Source, each [Quantity] >= 2)
+
+8. Split the OrderDate column into "Year", "Month", and "Day" columns.
+Table.AddColumn(Source, "Year", each Date.Year([OrderDate]))
+
+Table.AddColumn(Source, "Month", each Date.Month([OrderDate]))
+
+Table.AddColumn(Source, "Day", each Date.Day([OrderDate]))
+
+9. Replace all "Mouse" entries with "Computer Mouse".
+Table.ReplaceValue(
+    Source,
+    "Mouse",
+    "Computer Mouse",
+    Replacer.ReplaceText,
+    {"Product"}
+)
+
+10. Sort the table by OrderDate (newest first).
+Table.Sort(Source, {{"OrderDate", Order.Descending}})
+
+11. Add a custom column: TotalSpent = Quantity * Price.
+Table.AddColumn(
+    Source,
+    "TotalSpent",
+    each [Quantity] * [Price],
+    type number
+)
+
+12. Group the table by CustID to show total spending per customer.
+Table.Group(
+    Source,
+    {"CustID"},
+    {{"TotalSpending", each List.Sum([Quantity] * [Price]), type number}}
+)
+
+13. Fix inconsistent date formats in OrderDate.
+Table.TransformColumnTypes(
+    Source,
+    {{"OrderDate", type date}}
+)
+
+14. Create a conditional column: "High Value" if Price > 100.
+Table.AddColumn(
+    Source,
+    "OrderType",
+    each if [Price] > 100 then "High Value" else "Normal",
+    type text
+)
+
+15. Optimize the query to reduce refresh time.
+
+Remove unused columns early in the query to reduce data size.
+
+Table.SelectColumns(
+    Source,
+    {"CustID", "OrderDate", "Quantity", "Price"}
+)
