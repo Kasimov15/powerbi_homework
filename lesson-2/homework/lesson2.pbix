@@ -1,0 +1,72 @@
+Lesson 2 – Importing Data into Power BI
+1. List three data sources Power BI can connect to.
+
+Power BI can connect to:
+
+Excel or CSV files
+
+SQL databases
+
+Online services (SharePoint, Azure, Google Analytics)
+
+2. What is the first step to import data into Power BI Desktop?
+
+Open Power BI Desktop and click Home → Get Data.
+
+3. How do you refresh imported data in Power BI?
+
+Click the Refresh button in Power BI Desktop or Power BI Service.
+
+4. What file formats can Power BI import directly? (Name two.)
+
+CSV
+
+Excel (.xlsx)
+
+5. What does the "Navigator" window show after selecting a data source?
+
+The Navigator window shows available tables, sheets, or files that can be imported.
+
+6. How would you change OrderDate to a date format during import?
+
+Open Transform Data, select the OrderDate column, and change the data type to Date.
+
+7. What is the difference between "Load" and "Transform Data"?
+
+Load imports data directly
+
+Transform Data opens Power Query to clean and modify data before loading
+
+8. Why might you see an error when connecting to a SQL database? (Name one reason.)
+
+An error can happen due to incorrect login credentials or missing permissions.
+
+9. How do you replace a data source after importing it?
+
+Go to File → Options and settings → Data source settings, then change the source.
+
+10. How would you change the data source if Sales_Data.csv changed?
+
+Update the file path in Data source settings and refresh the data.
+
+11. Troubleshoot: Your CSV import fails due to a "mixed data type" error—how do you fix it?
+
+Open Power Query and manually set the correct data type for the column causing the issue.
+
+12. How would you automate data imports using Power BI and Power Automate?
+
+Use Power Automate to schedule data refreshes and trigger updates automatically.
+
+DAX002 / Power Query (M-code)
+13. Write the M-code to import only rows where Quantity > 1.
+Table.SelectRows(Source, each [Quantity] > 1)
+
+14. Import Sales_Data.csv and load only the "Product" and "Price" columns.
+Table.SelectColumns(Source, {"Product", "Price"})
+
+15. Connect to a live SQL database with parameters (e.g., filter by year).
+Sql.Database(
+    "ServerName",
+    "DatabaseName",
+    [Query="SELECT * FROM Sales WHERE YEAR(OrderDate) = 2023"]
+)
