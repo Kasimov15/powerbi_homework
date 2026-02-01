@@ -1,0 +1,74 @@
+Lesson 5 – Data Modeling Basics
+1. What is a primary key in a table?
+
+A primary key is a column that uniquely identifies each row in a table (for example, CustomerID).
+
+2. Name the two types of table relationships in Power BI.
+
+One-to-many (1:*)
+
+Many-to-many (:)
+
+3. How do you create a relationship between two tables in Power BI?
+
+Go to Model view, drag a key column from one table to the related column in another table.
+
+4. What is a "star schema"?
+
+A star schema is a data model where one fact table is connected to multiple dimension tables.
+
+5. Which table is typically the fact table in a sales dataset?
+
+The Sales table is usually the fact table.
+
+6. Why is ProductID in Sales.csv a foreign key?
+
+Because it links each sale to a product in the Products table.
+
+7. Explain why a star schema improves performance.
+
+It reduces complexity, improves query speed, and makes relationships easier to manage.
+
+8. Optimize a model with circular relationships—how would you resolve it?
+
+Remove unnecessary relationships or change filter direction to single.
+
+9. Use bidirectional filtering sparingly—when is it appropriate?
+
+It is useful in many-to-many relationships or when filters must flow both ways.
+
+DAX002 / Data Modeling
+10. Write DAX to enforce referential integrity if a CustomerID is deleted.
+ValidCustomer =
+IF (
+    ISBLANK ( RELATED ( Customer[CustomerID] ) ),
+    "Invalid",
+    "Valid"
+)
+
+11. Link Sales.csv to Customers.csv using CustomerID (one-to-many).
+
+Create a relationship:
+
+Customer[CustomerID] (1) → Sales[CustomerID] (*)
+
+12. Fix a relationship error where ProductID has mismatched data types.
+
+Change both columns to the same data type (for example, Whole Number) in Power Query.
+
+13. Add a new column TotalSales in Sales (Quantity * Price from Products).
+TotalSales =
+Sales[Quantity] * RELATED ( Products[Price] )
+
+14. Create a role-playing dimension for OrderDate and ShipDate.
+
+Create two relationships to the Date table:
+
+OrderDate → Date
+
+ShipDate → Date
+Make one relationship inactive and activate it using USERELATIONSHIP().
+
+15. Handle a many-to-many relationship between Customers and Products.
+
+Create a bridge table that contains CustomerID and ProductID, then connect both tables to it using one-to-many relationships.
