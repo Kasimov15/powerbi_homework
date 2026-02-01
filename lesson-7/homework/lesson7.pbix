@@ -1,0 +1,89 @@
+Lesson 7 – Project 1: Basic Sales Dashboard
+1. What is the purpose of the "Data/Model" view in Power BI?
+
+Data view is used to inspect and validate table data.
+
+Model view is used to create and manage relationships between tables.
+
+2. Troubleshoot: Slicers not affecting all visuals — how to fix?
+
+Check Edit interactions and ensure the slicer filters all visuals. Also confirm relationships are set correctly.
+
+DAX002 / Data Import
+3. Import Retail_Sales_Data.xlsx into Power BI.
+
+Open Power BI Desktop
+
+Click Get Data → Excel
+
+Select Retail_Sales_Data.xlsx
+
+Click Load
+
+VISUAL003 / Dashboard Creation
+4. Create a table visual showing Region and Sales.
+
+Select Table visual
+
+Drag Region and Sales into the visual
+
+5. Add a slicer for Product.
+
+Add a Slicer visual
+
+Drag Product into the slicer field
+
+6. Format the dashboard theme to "Dark Mode."
+
+Go to View → Themes → Dark.
+
+7. Build a dashboard with the following visuals:
+
+Bar chart (Sales by Region):
+
+Axis: Region
+
+Values: Sales
+
+Line chart (Sales over Date):
+
+X-Axis: Date
+
+Y-Axis: Sales
+
+Card (Total Profit):
+
+Field: Profit
+
+8. Add a drill-through filter from Region to a detailed sales page.
+
+Create a new page → Add Region to Drill-through filters → Right-click Region in the main report to drill through.
+
+9. Use conditional formatting to highlight high-profit regions.
+
+Select the visual → Conditional formatting → Set rules based on Profit.
+
+DAX002 / Publishing & Optimization
+10. Publish the dashboard to Power BI Service.
+
+Click Publish, sign in, and choose a workspace.
+
+11. Share the report with a colleague (simulate steps).
+
+Open the report in Power BI Service → Click Share → Enter email → Send.
+
+12. Add a "Sales Growth %" measure without DAX (Quick Measures).
+
+Go to Quick Measures → Percentage difference from previous value and select Sales and Date.
+
+13. Optimize the dataset for faster refresh.
+
+Remove unused columns in Power Query and reduce data size before loading.
+
+14. Embed the dashboard into a PowerPoint presentation.
+
+In Power BI Service, use Export → PowerPoint or Embed → PowerPoint.
+
+15. Set up a scheduled refresh for the dataset in Power BI Service.
+
+Go to Dataset settings → Scheduled refresh, set time and credentials.
