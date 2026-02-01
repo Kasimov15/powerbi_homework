@@ -1,0 +1,103 @@
+Lesson 4 – Data Transformation with Power Query (Part 2)
+1. What is the difference between "Merge" and "Append" in Power Query?
+
+Merge combines tables side-by-side using a common column (like a JOIN in SQL).
+
+Append stacks tables on top of each other (like UNION in SQL).
+
+2. How do you split a "Full Name" column into "First Name" and "Last Name"?
+
+Select the column → Split Column → By Delimiter → Space.
+
+3. What is "Pivot Columns" used for?
+
+Pivot Columns converts row values into column headers and summarizes the data.
+
+4. How do you undo a step in Power Query?
+
+Delete or edit the step in the Applied Steps pane.
+
+5. What is the purpose of "Reference" vs. "Duplicate" in queries?
+
+Duplicate creates an independent copy of the query.
+
+Reference creates a linked query that updates when the original changes.
+
+DAX002 / Power Query (M-code)
+6. Merge Orders.csv and Customers.xlsx on CustID (inner join).
+Table.NestedJoin(
+    Orders,
+    {"CustID"},
+    Customers,
+    {"CustID"},
+    "CustomerData",
+    JoinKind.Inner
+)
+
+7. Pivot the Product column to show total Quantity per product.
+Table.Pivot(
+    Source,
+    List.Distinct(Source[Product]),
+    "Product",
+    "Quantity",
+    List.Sum
+)
+
+8. Append two tables with identical columns.
+Table.Combine({Orders_Jan, Orders_Feb})
+
+9. Use "Fill Down" to replace nulls in the Email column.
+Table.FillDown(Source, {"Email"})
+
+10. Extract the domain from the Email column.
+Table.AddColumn(
+    Source,
+    "EmailDomain",
+    each Text.AfterDelimiter([Email], "@"),
+    type text
+)
+
+11. Merge queries dynamically based on a parameter (JoinType).
+JoinKindParam =
+    if JoinType = "Inner" then JoinKind.Inner else JoinKind.LeftOuter,
+
+Table.NestedJoin(
+    Orders,
+    {"CustID"},
+    Customers,
+    {"CustID"},
+    "CustomerData",
+    JoinKindParam
+)
+
+12. Unpivot sales columns into Month and Sales format.
+Table.UnpivotOtherColumns(
+    Source,
+    {"Product"},
+    "Month",
+    "Sales"
+)
+
+13. Handle errors in a custom column using try...otherwise.
+Table.AddColumn(
+    Source,
+    "Result",
+    each try [Quantity] / [Price] otherwise 0,
+    type number
+)
+
+14. Create a function to clean phone numbers (remove dashes).
+(phone as text) =>
+Text.Replace(phone, "-", "")
+
+15. Optimize a query with many steps.
+
+Reduce steps by:
+
+removing unused columns early
+
+combining steps
+
+filtering data as soon as possible
+
+Table.SelectColumns(Source, {"CustID", "Product", "Quantity"})
