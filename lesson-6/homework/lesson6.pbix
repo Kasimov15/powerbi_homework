@@ -1,0 +1,88 @@
+Lesson 6 – Creating Basic Visualizations & Interactivity
+1. Name three types of visuals you can create in Power BI.
+
+Bar chart
+
+Line chart
+
+Pie chart
+
+2. How do you add a slicer to a report?
+
+Click the Slicer visual in the Visualizations pane and drag a field into it.
+
+3. What is the difference between a bar chart and a column chart?
+
+Bar chart shows data horizontally
+
+Column chart shows data vertically
+
+4. How do you change the color of a visual background?
+
+Select the visual → Format pane → Background → Color.
+
+5. What does "drill-down" mean in a visual?
+
+Drill-down lets users click on a data point to see more detailed levels of data.
+
+VISUAL003 (Hands-on / Conceptual)
+6. Create a bar chart showing SalesAmount by Region.
+
+Select Bar chart
+
+Drag Region to Axis
+
+Drag SalesAmount to Values
+
+7. Add a slicer for Quarter to filter all visuals on the page.
+
+Add a Slicer
+
+Drag Quarter into the slicer field
+
+8. Format the bar chart to show data labels.
+
+Select the chart → Format → Data labels → On.
+
+9. Use a line chart to show SalesAmount trends over Quarter.
+
+Select Line chart
+
+Quarter → X-Axis
+
+SalesAmount → Y-Axis
+
+10. Add a tooltip to display Product details when hovering over bars.
+
+Drag Product into the Tooltips field of the visual.
+
+11. Sync slicers across multiple report pages.
+
+Use View → Sync slicers, then select pages to sync.
+
+12. Create a custom visual with dynamic measure selection (Sales vs. Profit).
+
+Use Field Parameters to let users switch between measures dynamically.
+
+13. Implement a hierarchy for Region > Product > Quarter drill-down.
+
+Create a hierarchy by dragging:
+
+Region
+
+Product
+
+Quarter
+into one hierarchy field, then enable drill-down.
+
+14. Use bookmarks to toggle between two visuals in the same space.
+
+Create two bookmarks (one per visual) and add buttons linked to each bookmark.
+
+15. Optimize a slow-rendering report with 10+ visuals.
+
+Reduce the number of visuals per page
+
+Use filters instead of extra visuals
+
+Optimize the data model (star schema, fewer columns)
