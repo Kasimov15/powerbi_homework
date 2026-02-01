@@ -1,0 +1,80 @@
+Lesson 8 – Introduction to DAX Basics
+1. What does DAX stand for?
+
+DAX stands for Data Analysis Expressions.
+
+2. What is the difference between a calculated column and a measure?
+
+A calculated column is calculated row by row and stored in the table.
+
+A measure is calculated on the fly based on filters and is not stored.
+
+3. What does COUNTROWS() do in DAX?
+
+COUNTROWS() counts the number of rows in a table.
+
+4. What is a circular dependency error in a calculated column?
+
+It happens when a calculated column depends on itself directly or indirectly.
+
+5. Explain row context vs. filter context.
+
+Row context works one row at a time (used in calculated columns).
+
+Filter context applies filters to calculate results (used in measures).
+
+DAX002 / DAX Practice
+6. Write a DAX formula to sum the Sales column.
+Total Sales = SUM ( DAX_Practice_Data[Sales] )
+
+7. Use DIVIDE to calculate Profit Margin (Profit / Sales).
+Profit Margin =
+DIVIDE (
+    SUM ( DAX_Practice_Data[Sales] ) - SUM ( DAX_Practice_Data[Cost] ),
+    SUM ( DAX_Practice_Data[Sales] )
+)
+
+8. Create a measure: Total Profit (Sales − Cost).
+Total Profit =
+SUM ( DAX_Practice_Data[Sales] ) - SUM ( DAX_Practice_Data[Cost] )
+
+9. Write a measure to calculate Average Sales per Product.
+Average Sales per Product =
+AVERAGE ( DAX_Practice_Data[Sales] )
+
+10. Use IF() to tag products as "High Profit" if Profit > 1000.
+Profit Tag =
+IF (
+    SUM ( DAX_Practice_Data[Sales] ) - SUM ( DAX_Practice_Data[Cost] ) > 1000,
+    "High Profit",
+    "Normal"
+)
+
+11. Write a measure to calculate YTD Sales using TOTALYTD().
+YTD Sales =
+TOTALYTD (
+    SUM ( DAX_Practice_Data[Sales] ),
+    DAX_Practice_Data[Date]
+)
+
+12. Create a dynamic measure that switches between Sales, Profit, and Margin.
+
+Use Field Parameters to allow switching between measures dynamically.
+
+13. Optimize a slow DAX measure using VAR.
+Optimized Profit =
+VAR TotalSales = SUM ( DAX_Practice_Data[Sales] )
+VAR TotalCost  = SUM ( DAX_Practice_Data[Cost] )
+RETURN
+    TotalSales - TotalCost
+
+14. Use CALCULATE() to override a filter.
+All Products Sales =
+CALCULATE (
+    SUM ( DAX_Practice_Data[Sales] ),
+    ALL ( DAX_Practice_Data )
+)
+
+15. Write a measure that returns the highest sales amount.
+Max Sales =
+MAX ( DAX_Practice_Data[Sales] )
