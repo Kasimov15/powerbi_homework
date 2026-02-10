@@ -1,0 +1,313 @@
+// ====== DAX002 Question 1: Create Date Table with 7 columns ======
+Date Table = 
+VAR CurrentDate = TODAY()
+VAR StartDate = CurrentDate - 7
+VAR EndDate = CurrentDate + 7
+VAR DateSequence = 
+    CALENDAR(StartDate, EndDate)
+RETURN
+    ADDCOLUMNS(
+        DateSequence,
+        "Day Name", FORMAT([Date], "dddd"),
+        "Day Name Uzbek", 
+            SWITCH(
+                WEEKDAY([Date], 2),
+                1, "Dushanba",
+                2, "Seshanba", 
+                3, "Chorshanba",
+                4, "Payshanba",
+                5, "Juma",
+                6, "Shanba",
+                7, "Yakshanba",
+                "Noma'lum"
+            ),
+        "Year", YEAR([Date]),
+        "Month Name", FORMAT([Date], "MMMM"),
+        "Day Number", DAY([Date]),
+        "Fiscal Quarter",
+            VAR MonthNum = MONTH([Date])
+            VAR FiscalMonth = 
+                IF(
+                    MonthNum >= 10,
+                    MonthNum - 9,
+                    MonthNum + 3
+                )
+            RETURN
+                "Q" & ROUNDUP(FiscalMonth / 3, 0)
+    )
+
+// ====== Financial Functions & Time Intelligence ======
+
+// 1. Total Sales Base Measure
+Total Sales = SUM(Sales[Amount])
+
+// 2. Year-to-Date Sales
+YTD Sales = 
+TOTALYTD(
+    [Total Sales],
+    Sales[SaleDate]
+)
+
+// 3. Quarter-to-Date Sales
+QTD Sales = 
+TOTALQTD(
+    [Total Sales],
+    Sales[SaleDate]
+)
+
+// 4. Month-to-Date Sales
+MTD Sales = 
+TOTALMTD(
+    [Total Sales],
+    Sales[SaleDate]
+)
+
+// 5. Previous Year Sales
+PY Sales = 
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR(Sales[SaleDate])
+)
+
+// 6. Year-over-Year Growth
+YoY Growth = 
+DIVIDE(
+    [Total Sales] - [PY Sales],
+    [PY Sales]
+)
+
+// 7. Moving Average (3 months)
+Moving Avg 3M = 
+AVERAGEX(
+    DATESINPERIOD(
+        Sales[SaleDate],
+        LASTDATE(Sales[SaleDate]),
+        -3,
+        MONTH
+    ),
+    [Total Sales]
+)
+
+// 8. Sales Growth vs Previous Month
+MoM Growth = 
+VAR CurrentMonthSales = [Total Sales]
+VAR PreviousMonthSales = 
+    CALCULATE(
+        [Total Sales],
+        PREVIOUSMONTH(Sales[SaleDate])
+    )
+RETURN
+    DIVIDE(
+        CurrentMonthSales - PreviousMonthSales,
+        PreviousMonthSales
+    )
+
+// 9. Day of Week Analysis
+Weekday vs Weekend = 
+VAR DayOfWeek = WEEKDAY(SELECTEDVALUE(Sales[SaleDate]), 2)
+RETURN
+    IF(
+        DayOfWeek <= 5,
+        "Weekday",
+        "Weekend"
+    )
+
+// ====== Financial Functions ======
+
+// 10. Net Present Value (NPV) for each project
+Project NPV = 
+VAR DiscountRate = SELECTEDVALUE(InvestmentData[DiscountRate])
+VAR CashFlows = {
+    SELECTEDVALUE(InvestmentData[InitialInvestment]),
+    SELECTEDVALUE(InvestmentData[CashFlow1]),
+    SELECTEDVALUE(InvestmentData[CashFlow2]),
+    SELECTEDVALUE(InvestmentData[CashFlow3]),
+    SELECTEDVALUE(InvestmentData[CashFlow4])
+}
+RETURN
+    NPV(DiscountRate, CashFlows)
+
+// 11. Internal Rate of Return (IRR) approximation
+Project IRR = 
+VAR CashFlows = {
+    SELECTEDVALUE(InvestmentData[InitialInvestment]),
+    SELECTEDVALUE(InvestmentData[CashFlow1]),
+    SELECTEDVALUE(InvestmentData[CashFlow2]),
+    SELECTEDVALUE(InvestmentData[CashFlow3]),
+    SELECTEDVALUE(InvestmentData[CashFlow4])
+}
+RETURN
+    IRR(CashFlows)
+
+// 12. Future Value (FV) calculation
+Future Value = 
+VAR Rate = 0.08  // Annual interest rate
+VAR Nper = 5      // Number of periods
+VAR Pmt = -1000   // Regular payment
+VAR PV = -5000    // Present value
+VAR Type = 0      // End of period
+RETURN
+    FV(Rate, Nper, Pmt, PV, Type)
+
+// 13. Present Value (PV) calculation
+Present Value = 
+VAR Rate = 0.1    // Discount rate
+VAR Nper = 5      // Number of periods
+VAR Pmt = 2000    // Regular payment
+VAR FV = 0        // Future value
+VAR Type = 0      // End of period
+RETURN
+    PV(Rate, Nper, Pmt, FV, Type)
+
+// 14. Payment calculation (PMT)
+Loan Payment = 
+VAR Rate = 0.05/12  // Monthly interest rate
+VAR Nper = 60       // Number of months
+VAR PV = 25000      // Loan amount
+RETURN
+    PMT(Rate, Nper, PV)
+
+// 15. Gross Profit Margin
+Gross Profit Margin = 
+VAR TotalRevenue = [Total Sales]
+VAR TotalCost = 
+    SUMX(
+        RELATEDTABLE(Products),
+        Products[Cost] * RELATED(Sales[Amount]) / Products[Price]
+    )
+RETURN
+    DIVIDE(
+        TotalRevenue - TotalCost,
+        TotalRevenue
+    )
+
+// ====== Advanced Time Intelligence ======
+
+// 16. Same Period Last Year (dynamic)
+Sales SPY = 
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR('Date Table'[Date])
+)
+
+// 17. Rolling 12 Months Sales
+Rolling 12M Sales = 
+CALCULATE(
+    [Total Sales],
+    DATESBETWEEN(
+        Sales[SaleDate],
+        EDATE(LASTDATE(Sales[SaleDate]), -11),
+        LASTDATE(Sales[SaleDate])
+    )
+)
+
+// 18. Year-over-Year Difference
+YoY Difference = [Total Sales] - [PY Sales]
+
+// 19. Working Days Sales (exclude weekends)
+Working Days Sales = 
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        VALUES(Sales[SaleDate]),
+        WEEKDAY(Sales[SaleDate], 2) <= 5
+    )
+)
+
+// 20. Quarterly Growth by Region
+Quarterly Growth = 
+VAR CurrentQuarter = 
+    CALCULATE(
+        [Total Sales],
+        DATESQTD(Sales[SaleDate])
+    )
+VAR PreviousQuarter = 
+    CALCULATE(
+        [Total Sales],
+        DATEADD(DATESQTD(Sales[SaleDate]), -1, QUARTER)
+    )
+RETURN
+    DIVIDE(CurrentQuarter - PreviousQuarter, PreviousQuarter)
+
+// ====== Date Hierarchy Measures ======
+
+// 21. Current Day Sales
+Today Sales = 
+CALCULATE(
+    [Total Sales],
+    Sales[SaleDate] = TODAY()
+)
+
+// 22. Yesterday Sales
+Yesterday Sales = 
+CALCULATE(
+    [Total Sales],
+    Sales[SaleDate] = TODAY() - 1
+)
+
+// 23. This Week Sales
+This Week Sales = 
+CALCULATE(
+    [Total Sales],
+    DATESINPERIOD(
+        Sales[SaleDate],
+        TODAY(),
+        -WEEKDAY(TODAY(), 2) + 1,
+        DAY
+    )
+)
+
+// 24. Fiscal Year Calculation (starting October)
+Fiscal Year = 
+VAR SaleMonth = MONTH(SELECTEDVALUE(Sales[SaleDate]))
+VAR SaleYear = YEAR(SELECTEDVALUE(Sales[SaleDate]))
+RETURN
+    IF(
+        SaleMonth >= 10,
+        SaleYear & "-" & SaleYear + 1,
+        SaleYear - 1 & "-" & SaleYear
+    )
+
+// 25. Fiscal Quarter (starting October)
+Fiscal Quarter = 
+VAR SaleDate = SELECTEDVALUE(Sales[SaleDate])
+VAR MonthNum = MONTH(SaleDate)
+VAR FiscalMonth = 
+    IF(
+        MonthNum >= 10,
+        MonthNum - 9,
+        MonthNum + 3
+    )
+RETURN
+    "FQ" & ROUNDUP(FiscalMonth / 3, 0)
+
+// ====== Date Table Creation (Alternative Method) ======
+Calendar Table = 
+VAR StartDate = DATE(2022, 1, 1)
+VAR EndDate = DATE(2024, 12, 31)
+RETURN
+    ADDCOLUMNS(
+        CALENDAR(StartDate, EndDate),
+        "Year", YEAR([Date]),
+        "Month", FORMAT([Date], "MMMM"),
+        "MonthNum", MONTH([Date]),
+        "Quarter", "Q" & FORMAT([Date], "Q"),
+        "Weekday", FORMAT([Date], "dddd"),
+        "WeekdayNum", WEEKDAY([Date], 2),
+        "IsWeekend", IF(WEEKDAY([Date], 2) > 5, "Yes", "No"),
+        "Fiscal Year",
+            IF(
+                MONTH([Date]) >= 10,
+                YEAR([Date]) & "-" & YEAR([Date]) + 1,
+                YEAR([Date]) - 1 & "-" & YEAR([Date])
+            ),
+        "Fiscal Quarter",
+            VAR FiscalMonth = 
+                IF(
+                    MONTH([Date]) >= 10,
+                    MONTH([Date]) - 9,
+                    MONTH([Date]) + 3
+                )
+            RETURN
+                "FQ" & ROUNDUP(FiscalMonth / 3, 0)
+    )
