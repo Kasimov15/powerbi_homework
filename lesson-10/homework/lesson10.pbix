@@ -1,0 +1,220 @@
+// ====== TEXT001 Questions ======
+
+// 1. What does FILTER(Sales, Sales[Amount] > 1000) return?
+// Returns: A table of rows from Sales where Amount > 1000
+
+// 2. ALLEXCEPT vs ALL:
+// ALLEXCEPT(Sales, Sales[Region]) removes all filters except those on Region column
+// ALL(Sales) removes all filters from the entire Sales table
+
+// 3. Purpose of ALLSELECTED:
+// Returns all rows that were in the original filter context, ignoring inner filters
+// but respecting external filters like slicers
+
+// 4. ALLSELECTED unexpected behavior:
+// Can be affected by visual-level filters, may produce different results
+// in nested visuals vs total rows
+
+// 5. SWITCH debug in matrix:
+// Ensure SWITCH is checking for the correct field context
+// Use HASONEVALUE() or SELECTEDVALUE() for proper context transition
+
+// ====== DAX002 Questions ======
+
+// 6. High Sales using FILTER:
+High Sales FILTER = 
+CALCULATE(
+    SUM(Sales[Amount]),
+    FILTER(
+        ALL(Sales[Amount]),
+        Sales[Amount] > 1000
+    )
+)
+
+// 7. SWITCH to categorize Amount:
+Amount Category = 
+VAR AmountValue = SUM(Sales[Amount])
+RETURN
+SWITCH(
+    TRUE(),
+    AmountValue < 500, "Low",
+    AmountValue >= 500 && AmountValue <= 1000, "Medium",
+    AmountValue > 1000, "High",
+    "Unknown"
+)
+
+// 8. Regional Sales % with ALLEXCEPT:
+Regional Sales % = 
+DIVIDE(
+    SUM(Sales[Amount]),
+    CALCULATE(
+        SUM(Sales[Amount]),
+        ALLEXCEPT(Sales, Sales[Region])
+    )
+)
+
+// 9. Dynamic measure with SWITCH toggle:
+Dynamic Aggregation = 
+VAR AggType = SELECTEDVALUE('Aggregation Type'[Type], "SUM")
+RETURN
+SWITCH(
+    AggType,
+    "SUM", SUM(Sales[Amount]),
+    "AVERAGE", AVERAGE(Sales[Amount]),
+    "COUNT", COUNTROWS(Sales),
+    BLANK()
+)
+
+// 10. FILTER inside CALCULATE to exclude Furniture:
+Non Furniture Sales = 
+CALCULATE(
+    SUM(Sales[Amount]),
+    FILTER(
+        ALL(Products[Category]),
+        Products[Category] <> "Furniture"
+    )
+)
+
+// 11. Total sales ignoring region filters:
+Total Sales Ignore Region = 
+CALCULATE(
+    SUM(Sales[Amount]),
+    ALL(Sales[Region])
+)
+
+// 12. Optimized High Sales measure:
+High Sales Optimized = 
+CALCULATE(
+    SUM(Sales[Amount]),
+    Sales[Amount] > 1000
+)
+
+// 13. Top 2 Products using TOPN:
+Top 2 Products = 
+VAR TopProducts = 
+    TOPN(
+        2,
+        ALL(Products[ProductID]),
+        [Total Sales],
+        DESC
+    )
+RETURN
+    IF(
+        HASONEVALUE(Products[ProductID]),
+        IF(
+            VALUES(Products[ProductID]) IN TopProducts,
+            [Total Sales],
+            BLANK()
+        ),
+        SUMX(
+            TopProducts,
+            [Total Sales]
+        )
+    )
+
+// 14. ALLSELECTED with no parameters:
+Respect Slicers Only = 
+CALCULATE(
+    SUM(Sales[Amount]),
+    ALLSELECTED()
+)
+
+// 15. "Reset filters" button simulation:
+Reset All Filters = 
+CALCULATE(
+    SUM(Sales[Amount]),
+    ALL(Sales)
+)
+
+// ====== Supporting Measures ======
+
+// Total Sales (base measure):
+Total Sales = SUM(Sales[Amount])
+
+// Product Total Sales (for TOPN):
+Product Total Sales = 
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT(Sales, Products[ProductID])
+)
+
+// Region Manager (for relationships):
+Region Manager = 
+IF(
+    ISBLANK(RELATED(Regions[Manager])),
+    "Unknown",
+    RELATED(Regions[Manager])
+)
+
+// ====== Advanced Examples ======
+
+// Cumulative Total by Date:
+Cumulative Sales = 
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(Sales[SaleDate]),
+        Sales[SaleDate] <= MAX(Sales[SaleDate])
+    )
+)
+
+// Moving Average (3 periods):
+Moving Average 3 Periods = 
+VAR CurrentDate = MAX(Sales[SaleDate])
+VAR Periods = 3
+VAR DateRange = 
+    DATESINPERIOD(
+        Sales[SaleDate],
+        CurrentDate,
+        -Periods + 1,
+        DAY
+    )
+RETURN
+    CALCULATE(
+        AVERAGEX(Sales, Sales[Amount]),
+        DateRange
+    )
+
+// Dynamic Top N (parameter driven):
+Dynamic Top N Products = 
+VAR TopN = SELECTEDVALUE('TopN Parameter'[Value], 3)
+VAR TopProducts = 
+    TOPN(
+        TopN,
+        ALL(Products[ProductID]),
+        [Product Total Sales],
+        DESC
+    )
+RETURN
+    IF(
+        HASONEVALUE(Products[ProductID]),
+        IF(
+            VALUES(Products[ProductID]) IN TopProducts,
+            [Product Total Sales],
+            BLANK()
+        ),
+        SUMX(
+            TopProducts,
+            [Product Total Sales]
+        )
+    )
+
+// Category Comparison vs All:
+Category vs Total = 
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALLSELECTED(Products[Category])
+    )
+)
+
+// Year-over-Year Growth:
+Sales YoY Growth = 
+VAR CurrentYear = 
+    CALCULATE(
+        [Total Sales],
+        SAMEPERIODLASTYEAR(Sales[SaleDate])
+    )
+RETURN
+    DIVIDE([Total Sales] - CurrentYear, CurrentYear)
