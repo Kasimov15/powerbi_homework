@@ -1,0 +1,339 @@
+// ====== CONNECT TO ADVENTUREWORKS FIRST ======
+// Steps to connect:
+// 1. Get Data → SQL Server
+// 2. Server: localhost\SQLEXPRESS (or your server)
+// 3. Database: AdventureWorksDW2019
+// 4. Select DimCustomer table
+
+// ====== BASIC LEVEL (1-10) ======
+
+// 1. Concatenate First and Last Name
+Full Name = 
+DimCustomer[FirstName] & " " & DimCustomer[LastName]
+
+// 2. Convert Email Address to Uppercase
+Email Upper = UPPER(DimCustomer[EmailAddress])
+
+// 3. Extract First 3 Characters from First Name
+First 3 Chars = LEFT(DimCustomer[FirstName], 3)
+
+// 4. Count Characters in Last Name
+Last Name Length = LEN(DimCustomer[LastName])
+
+// 5. Convert First Name to Lowercase
+First Name Lower = LOWER(DimCustomer[FirstName])
+
+// 6. Trim Spaces in EnglishEducation
+Education Trimmed = TRIM(DimCustomer[EnglishEducation])
+
+// 7. Repeat '*' Character Equal to Length of First Name
+Name Mask = REPT("*", LEN(DimCustomer[FirstName]))
+
+// 8. Get Last 4 Characters of Phone Number
+Phone Last 4 = 
+IF(
+    LEN(DimCustomer[Phone]) >= 4,
+    RIGHT(DimCustomer[Phone], 4),
+    DimCustomer[Phone]
+)
+
+// 9. Format YearlyIncome to Currency with 2 Decimals
+Formatted Income = FORMAT(DimCustomer[YearlyIncome], "Currency")
+
+// 10. Check If FirstName and LastName Are Exactly the Same
+Same Name Check = 
+IF(
+    EXACT(DimCustomer[FirstName], DimCustomer[LastName]),
+    "Yes",
+    "No"
+)
+
+// ====== INTERMEDIATE LEVEL (11-20) ======
+
+// 11. Find If 'Manager' Appears in Occupation (Case Sensitive)
+Is Manager = 
+IF(
+    SEARCH("Manager", DimCustomer[EnglishOccupation], , 0) > 0,
+    "Yes",
+    "No"
+)
+
+// 12. Search for 'graduate' in EnglishEducation (Case Insensitive)
+Has Graduate = 
+IF(
+    ISNUMBER(SEARCH("graduate", DimCustomer[EnglishEducation], , 1)),
+    "Contains Graduate",
+    "No"
+)
+
+// 13. Extract Characters 3–7 from First Name
+First Name 3-7 = 
+IF(
+    LEN(DimCustomer[FirstName]) >= 7,
+    MID(DimCustomer[FirstName], 3, 5),
+    DimCustomer[FirstName]
+)
+
+// 14. Replace Area Code in Phone Number with 'XXX'
+Phone Masked = 
+VAR PhoneStr = DimCustomer[Phone]
+VAR FirstDash = FIND("-", PhoneStr, 1, 0)
+RETURN
+    IF(
+        FirstDash > 0,
+        "XXX" & RIGHT(PhoneStr, LEN(PhoneStr) - FirstDash + 1),
+        PhoneStr
+    )
+
+// 15. Format BirthDate as 'DD-MM-YYYY'
+Formatted BirthDate = 
+FORMAT(DimCustomer[BirthDate], "DD-MM-YYYY")
+
+// 16. Create Initial + Last Name Format (e.g. J.Smith)
+Initial Last Name = 
+LEFT(DimCustomer[FirstName], 1) & ". " & DimCustomer[LastName]
+
+// 17. Capitalize First Letter of FirstName, Lowercase the Rest
+Proper Case Name = 
+UPPER(LEFT(DimCustomer[FirstName], 1)) & 
+LOWER(RIGHT(DimCustomer[FirstName], LEN(DimCustomer[FirstName]) - 1))
+
+// 18. Substitute Dashes with Spaces in Phone
+Phone Spaces = 
+SUBSTITUTE(DimCustomer[Phone], "-", " ")
+
+// 19. Convert BirthDate Year to Numeric Using VALUE
+Birth Year Numeric = 
+VALUE(FORMAT(DimCustomer[BirthDate], "YYYY"))
+
+// 20. Show YearlyIncome Rounded to 1 Decimal Without Commas
+Income Rounded = 
+FORMAT(DimCustomer[YearlyIncome], "0.0")
+
+// ====== ADVANCED LEVEL (21-30) ======
+
+// 21. Customer Code: First 2 Letters of LastName + Last 2 of CustomerKey
+Customer Code = 
+UPPER(LEFT(DimCustomer[LastName], 2)) & 
+RIGHT(FORMAT(DimCustomer[CustomerKey], "0"), 2)
+
+// 22. Validate Email Ends with '.com' and Contains '@'
+Valid Email = 
+IF(
+    CONTAINSSTRING(DimCustomer[EmailAddress], "@") &&
+    RIGHT(DimCustomer[EmailAddress], 4) = ".com",
+    "Valid",
+    "Invalid"
+)
+
+// 23. Extract Domain Name from EmailAddress
+Email Domain = 
+VAR AtPosition = FIND("@", DimCustomer[EmailAddress], 1, 0)
+RETURN
+    IF(
+        AtPosition > 0,
+        MID(
+            DimCustomer[EmailAddress], 
+            AtPosition + 1, 
+            LEN(DimCustomer[EmailAddress]) - AtPosition
+        ),
+        "No Domain"
+    )
+
+// 24. Mask Phone Number Except Last 4 Digits
+Phone Fully Masked = 
+VAR PhoneStr = DimCustomer[Phone]
+VAR PhoneLength = LEN(PhoneStr)
+RETURN
+    IF(
+        PhoneLength >= 4,
+        REPT("*", PhoneLength - 4) & RIGHT(PhoneStr, 4),
+        PhoneStr
+    )
+
+// 25. Proper Casing of Last Name (simulate manually)
+Proper Last Name = 
+UPPER(LEFT(DimCustomer[LastName], 1)) & 
+LOWER(RIGHT(DimCustomer[LastName], LEN(DimCustomer[LastName]) - 1))
+
+// 26. Replace Multiple Spaces in EnglishOccupation with Single Space
+Occupation Clean = 
+TRIM(
+    SUBSTITUTE(
+        SUBSTITUTE(
+            DimCustomer[EnglishOccupation],
+            "  ", " "
+        ),
+        "  ", " "
+    )
+)
+
+// 27. Generate Custom ID: Initials + Birth Year (e.g., JD_1985)
+Custom ID = 
+LEFT(DimCustomer[FirstName], 1) & 
+LEFT(DimCustomer[LastName], 1) & 
+"_" & 
+FORMAT(DimCustomer[BirthDate], "YYYY")
+
+// 28. Remove Hyphens and Convert Phone to Number
+Phone Number Only = 
+VALUE(
+    SUBSTITUTE(
+        SUBSTITUTE(
+            DimCustomer[Phone],
+            "-",
+            ""
+        ),
+        " ",
+        ""
+    )
+)
+
+// 29. Customer Segmentation using EnglishEducation and YearlyIncome
+Customer Segment = 
+SWITCH(
+    TRUE(),
+    DimCustomer[EnglishEducation] = "Graduate Degree" && DimCustomer[YearlyIncome] > 90000, "Elite",
+    DimCustomer[EnglishEducation] = "Bachelors" && 
+        DimCustomer[YearlyIncome] >= 60000 && 
+        DimCustomer[YearlyIncome] <= 90000, "Professional",
+    DimCustomer[EnglishEducation] = "High School", "Basic",
+    "Other"
+)
+
+// 30. Dynamic Customer Count Measure
+Dynamic Customer Count = 
+VAR SelectedGenders = VALUES(DimCustomer[Gender])
+VAR GenderCount = COUNTROWS(SelectedGenders)
+RETURN
+    SWITCH(
+        TRUE(),
+        GenderCount = 0, COUNTROWS(DimCustomer),  // No selection
+        GenderCount = 1, 
+            CALCULATE(
+                COUNTROWS(DimCustomer),
+                ALLEXCEPT(DimCustomer, DimCustomer[Gender])
+            ),  // Single gender selected
+        GenderCount > 1, "Multiple Values Selected"
+    )
+
+// ====== ADDITIONAL USEFUL MEASURES ======
+
+// Total Customers Measure
+Total Customers = COUNTROWS(DimCustomer)
+
+// Email Validation with Detailed Error Messages
+Email Validation Detailed = 
+VAR HasAt = CONTAINSSTRING(DimCustomer[EmailAddress], "@")
+VAR HasDot = CONTAINSSTRING(DimCustomer[EmailAddress], ".")
+VAR EmailLength = LEN(DimCustomer[EmailAddress])
+RETURN
+    SWITCH(
+        TRUE(),
+        NOT HasAt, "Missing @ symbol",
+        NOT HasDot, "Missing . symbol",
+        EmailLength < 5, "Too short",
+        "Valid"
+    )
+
+// Age Calculation
+Customer Age = 
+DATEDIFF(DimCustomer[BirthDate], TODAY(), YEAR)
+
+// Age Group Categorization
+Age Group = 
+VAR Age = [Customer Age]
+RETURN
+    SWITCH(
+        TRUE(),
+        Age < 20, "Teen",
+        Age >= 20 && Age < 30, "20s",
+        Age >= 30 && Age < 40, "30s",
+        Age >= 40 && Age < 50, "40s",
+        Age >= 50 && Age < 60, "50s",
+        "60+"
+    )
+
+// Income Category
+Income Category = 
+SWITCH(
+    TRUE(),
+    DimCustomer[YearlyIncome] < 30000, "Low",
+    DimCustomer[YearlyIncome] >= 30000 && DimCustomer[YearlyIncome] < 60000, "Middle",
+    DimCustomer[YearlyIncome] >= 60000 && DimCustomer[YearlyIncome] < 100000, "Upper Middle",
+    DimCustomer[YearlyIncome] >= 100000, "High",
+    "Unknown"
+)
+
+// Complete Customer Profile
+Customer Profile = 
+"Name: " & DimCustomer[FirstName] & " " & DimCustomer[LastName] & 
+", Age: " & [Customer Age] & 
+", Income: " & FORMAT(DimCustomer[YearlyIncome], "Currency") & 
+", Education: " & DimCustomer[EnglishEducation] & 
+", Occupation: " & DimCustomer[EnglishOccupation]
+
+// Phone Validation and Formatting
+Phone Validated = 
+VAR CleanPhone = SUBSTITUTE(SUBSTITUTE(DimCustomer[Phone], "-", ""), " ", "")
+VAR PhoneLength = LEN(CleanPhone)
+RETURN
+    IF(
+        PhoneLength = 10 && ISNUMBER(VALUE(CleanPhone)),
+        "(" & LEFT(CleanPhone, 3) & ") " & 
+        MID(CleanPhone, 4, 3) & "-" & 
+        RIGHT(CleanPhone, 4),
+        "Invalid Phone"
+    )
+
+// Customer Status based on multiple factors
+Customer Status = 
+VAR Age = [Customer Age]
+VAR Income = DimCustomer[YearlyIncome]
+VAR Education = DimCustomer[EnglishEducation]
+RETURN
+    SWITCH(
+        TRUE(),
+        Education = "Graduate Degree" && Income > 100000 && Age < 40, "Rising Star",
+        Education IN {"Bachelors", "Graduate Degree"} && Income > 75000, "Established",
+        Education = "Partial College" && Income > 50000, "Growing",
+        "Standard"
+    )
+
+// Text Analysis: Count vowels in First Name
+Vowel Count = 
+VAR Name = UPPER(DimCustomer[FirstName])
+VAR Vowels = "AEIOU"
+VAR Counter = 
+    SUMX(
+        GENERATESERIES(1, LEN(Name)),
+        IF(
+            CONTAINSSTRING(Vowels, MID(Name, [Value], 1)),
+            1,
+            0
+        )
+    )
+RETURN Counter
+
+// Last Name Soundex (simplified)
+Name Soundex = 
+VAR FirstChar = UPPER(LEFT(DimCustomer[LastName], 1))
+VAR RestName = LOWER(RIGHT(DimCustomer[LastName], LEN(DimCustomer[LastName]) - 1))
+VAR Coded = 
+    SUBSTITUTE(
+        SUBSTITUTE(
+            SUBSTITUTE(
+                SUBSTITUTE(
+                    SUBSTITUTE(
+                        SUBSTITUTE(RestName, "b", "1"),
+                        "c", "2"
+                    ),
+                    "d", "3"
+                ),
+                "l", "4"
+            ),
+            "m", "5"
+        ),
+        "n", "6"
+    )
+RETURN FirstChar & LEFT(Coded, 3)
