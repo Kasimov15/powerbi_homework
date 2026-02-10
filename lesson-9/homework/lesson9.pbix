@@ -1,0 +1,118 @@
+// ====== TEXT001 Questions ======
+// 1. Row Context Example (Calculated Column):
+// Row context is the current row being evaluated in a calculated column or iterators.
+// Example:
+Total Price Column = Sales[Quantity] * Sales[UnitPrice]  // Evaluated row by row
+
+// 2. CALCULATE Example:
+Electronics Sales 1 = CALCULATE(SUM(Sales[Quantity]), Sales[Category] = "Electronics")
+// Returns: Total quantity for Electronics category (2 + 3 + 2 = 7 in our data)
+
+// 3. VAR vs RETURN:
+// VAR stores a value/expression, RETURN outputs the final result
+Example Measure = 
+VAR TotalQty = SUM(Sales[Quantity])
+VAR AvgPrice = AVERAGE(Sales[UnitPrice])
+RETURN TotalQty * AvgPrice
+
+// 4. CALCULATE overrides filters because:
+// It creates a new filter context, modifying or replacing existing filters with its filter arguments
+
+// 5. CALCULATE ignoring slicer: Likely caused by:
+// - ALL() function removing filters
+// - KEEPFILTERS() not used when needed
+// - Direct column references instead of table relationships
+
+// ====== DAX002 Questions ======
+
+// 6. Total Sales Measure:
+Total Sales = SUMX(Sales, Sales[Quantity] * Sales[UnitPrice])
+
+// 7. RELATED Column (in Sales table calculated column):
+Customer Name = RELATED(Customers[Name])
+
+// 8. TotalPrice Calculated Column:
+TotalPrice = Sales[Quantity] * Sales[UnitPrice]
+
+// 9. Electronics Sales Measure:
+Electronics Sales = 
+CALCULATE(
+    [Total Sales],
+    Sales[Category] = "Electronics"
+)
+
+// 10. Ignore Category Filters:
+Total Sales All Categories = 
+CALCULATE(
+    [Total Sales],
+    ALL(Sales[Category])
+)
+
+// 11. Fix RELATED Error:
+// Ensure relationships exist: Sales[CustomerID] → Customers[CustomerID]
+// Correct approach:
+Customer Region = 
+IF(
+    ISBLANK(RELATED(Customers[Region])),
+    "Unknown",
+    RELATED(Customers[Region])
+)
+
+// 12. Average UnitPrice:
+Average UnitPrice = AVERAGE(Sales[UnitPrice])
+
+// 13. VAR with Temporary Table:
+High Quantity Sales Count = 
+VAR HighQuantitySales = 
+    FILTER(Sales, Sales[Quantity] > 2)
+RETURN
+    COUNTROWS(HighQuantitySales)
+
+// 14. % of Category Sales:
+% of Category Sales = 
+DIVIDE(
+    [Total Sales],
+    CALCULATE([Total Sales], ALLEXCEPT(Sales, Sales[Category]))
+)
+
+// 15. Remove Filters Button Simulation:
+Remove Filters Measure = 
+CALCULATE(
+    [Total Sales],
+    ALL(
+        Sales[Category],
+        Sales[ProductID],
+        Customers[Region]
+        // Add more columns as needed
+    )
+)
+
+// ====== Additional Useful Measures ======
+
+// Relationship Check Measure:
+Check Relationship = 
+IF(
+    ISRELATED(Customers[Region]),
+    "Relationship Exists",
+    "No Relationship"
+)
+
+// Dynamic Category Sales:
+Dynamic Category Sales = 
+VAR SelectedCategory = SELECTEDVALUE(Sales[Category])
+RETURN
+    IF(
+        NOT ISBLANK(SelectedCategory),
+        CALCULATE([Total Sales], Sales[Category] = SelectedCategory),
+        [Total Sales]
+    )
+
+// Running Total:
+Running Total = 
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(Sales[SaleID]),
+        Sales[SaleID] <= MAX(Sales[SaleID])
+    )
+)
