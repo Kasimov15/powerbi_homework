@@ -1,0 +1,151 @@
+/* =====================================================
+   CARD_DATA SECTION
+   =====================================================
+
+Prerequisites:
+- Load Card_data.csv
+- Disable Auto DateTime
+- Ensure:
+    card_limit → Decimal
+    account_opened_date → Date
+    expire_dates → Date
+    client_id → Text or Whole Number
+    card_number → Text
+*/
+
+
+/* =====================================================
+   DATE TABLE FOR CARD DATA
+   ===================================================== */
+
+Date =
+ADDCOLUMNS(
+    CALENDARAUTO(),
+    "Year", YEAR([Date]),
+    "Month Number", MONTH([Date]),
+    "Month Name", FORMAT([Date], "MMMM"),
+    "Year-Month", FORMAT([Date], "YYYY-MM")
+)
+
+/* Create relationship:
+   Date[Date] → Card_data[account_opened_date]
+*/
+
+
+/* =====================================================
+   BASE MEASURES
+   ===================================================== */
+
+Total Card Limit =
+SUM('Card_data'[card_limit])
+
+
+Client Count =
+DISTINCTCOUNT('Card_data'[client_id])
+
+
+Card Count =
+COUNT('Card_data'[card_number])
+
+
+Cards Expiring =
+COUNT('Card_data'[card_number])
+
+
+/* =====================================================
+   TOP 10 CLIENTS MEASURE
+   ===================================================== */
+
+Total Limit per Client =
+CALCULATE(
+    [Total Card Limit],
+    ALLEXCEPT('Card_data', 'Card_data'[client_id])
+)
+
+
+Client Rank =
+RANKX(
+    ALL('Card_data'[client_id]),
+    [Total Limit per Client],
+    ,
+    DESC
+)
+
+
+Top 10 Client Flag =
+IF([Client Rank] <= 10, 1, 0)
+
+
+/* =====================================================
+   DYNAMIC TOP N BRAND
+   ===================================================== */
+
+/* Create a What-if Parameter:
+   Name: TopN Value
+   Minimum: 1
+   Maximum: 20
+   Increment: 1
+*/
+
+TopN Brand Rank =
+VAR RankBrand =
+    RANKX(
+        ALL('Card_data'[card_brand]),
+        [Total Card Limit],
+        ,
+        DESC
+    )
+RETURN RankBrand
+
+
+TopN Brand Filter =
+VAR SelectedN = SELECTEDVALUE('TopN Value'[TopN Value Value], 5)
+RETURN
+IF([TopN Brand Rank] <= SelectedN, 1, 0)
+
+
+/* =====================================================
+   SALES SECTION (DAX002)
+   =====================================================
+
+Load sales.csv
+Ensure:
+    Sales Date → Date
+    Customer → Text
+*/
+
+
+/* DATE TABLE FOR SALES */
+
+Sales Date Table =
+ADDCOLUMNS(
+    CALENDARAUTO(),
+    "Year", YEAR([Date]),
+    "Month", FORMAT([Date], "MMMM")
+)
+
+/* Relationship:
+   Sales Date Table[Date] → Sales[Sales Date]
+*/
+
+
+/* =====================================================
+   AVERAGE DAYS BETWEEN SALES (PER CUSTOMER)
+   ===================================================== */
+
+Average Days Between Sales =
+AVERAGEX(
+    VALUES('Sales'[Sales Date]),
+    VAR CurrentDate = 'Sales'[Sales Date]
+    VAR PrevDate =
+        CALCULATE(
+            MAX('Sales'[Sales Date]),
+            FILTER(
+                ALL('Sales'),
+                'Sales'[Customer] = MAX('Sales'[Customer]) &&
+                'Sales'[Sales Date] < CurrentDate
+            )
+        )
+    RETURN
+        DATEDIFF(PrevDate, CurrentDate, DAY)
+)
