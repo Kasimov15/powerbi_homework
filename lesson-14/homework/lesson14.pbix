@@ -1,0 +1,152 @@
+//---------------------------------------------------
+// BASE MEASURE
+//---------------------------------------------------
+
+Total Sales =
+SUM('Chocolate Sales'[Sales Amount])
+
+Total Boxes =
+SUM('Chocolate Sales'[Boxes Shipped])
+
+
+//---------------------------------------------------
+// 1️⃣ % Growth Compared to Last Year (VAR)
+//---------------------------------------------------
+
+Sales YoY % =
+VAR CurrentSales = [Total Sales]
+VAR LastYearSales =
+    CALCULATE(
+        [Total Sales],
+        SAMEPERIODLASTYEAR('Date'[Date])
+    )
+RETURN
+    DIVIDE(CurrentSales - LastYearSales, LastYearSales)
+
+
+//---------------------------------------------------
+// 2️⃣ Difference Current Month vs Previous Month
+//---------------------------------------------------
+
+MoM Difference =
+VAR CurrentMonthSales = [Total Sales]
+VAR PrevMonthSales =
+    CALCULATE(
+        [Total Sales],
+        PREVIOUSMONTH('Date'[Date])
+    )
+RETURN
+    CurrentMonthSales - PrevMonthSales
+
+
+//---------------------------------------------------
+// 3️⃣ Total Boxes + Average Monthly Boxes (Return Both)
+//---------------------------------------------------
+
+Boxes Summary =
+VAR TotalBox = [Total Boxes]
+VAR MonthsCount =
+    DISTINCTCOUNT('Date'[Year-Month])
+VAR AvgMonthly =
+    DIVIDE(TotalBox, MonthsCount)
+RETURN
+    TotalBox
+
+
+//---------------------------------------------------
+// 4️⃣ Return Average Monthly Boxes Only
+//---------------------------------------------------
+
+Average Monthly Boxes =
+VAR TotalBox = [Total Boxes]
+VAR MonthsCount =
+    DISTINCTCOUNT('Date'[Year-Month])
+RETURN
+    DIVIDE(TotalBox, MonthsCount)
+
+
+//---------------------------------------------------
+// 5️⃣ Growth Percentage From Last Month
+//---------------------------------------------------
+
+MoM Growth % =
+VAR CurrentMonthSales = [Total Sales]
+VAR PrevMonthSales =
+    CALCULATE(
+        [Total Sales],
+        PREVIOUSMONTH('Date'[Date])
+    )
+RETURN
+    DIVIDE(CurrentMonthSales - PrevMonthSales, PrevMonthSales)
+
+
+//---------------------------------------------------
+// 6️⃣ Moving Average (Last 3 Months)
+//---------------------------------------------------
+
+Moving Avg 3M =
+VAR Last3Months =
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -3,
+        MONTH
+    )
+RETURN
+    AVERAGEX(
+        Last3Months,
+        CALCULATE([Total Sales])
+    )
+
+
+//---------------------------------------------------
+// 7️⃣ Dynamic Message Based on Rank + YoY
+//---------------------------------------------------
+
+Dynamic Performance Message =
+VAR SelectedProduct =
+    SELECTEDVALUE('Chocolate Sales'[Product])
+
+VAR ProductRank =
+    RANKX(
+        ALL('Chocolate Sales'[Product]),
+        [Total Sales],
+        ,
+        DESC
+    )
+
+VAR YoYGrowth =
+    VAR CurrentSales = [Total Sales]
+    VAR LastYearSales =
+        CALCULATE(
+            [Total Sales],
+            SAMEPERIODLASTYEAR('Date'[Date])
+        )
+    RETURN
+        DIVIDE(CurrentSales - LastYearSales, LastYearSales)
+
+RETURN
+    SWITCH(
+        TRUE(),
+        ProductRank <= 3 && YoYGrowth > 0,
+            "Top Performer - Sales up by " & FORMAT(YoYGrowth, "0%"),
+        YoYGrowth > 0,
+            "Consistent Performer",
+        "Needs Improvement"
+    )
+
+
+//---------------------------------------------------
+// 8️⃣ Top 5 Product Flag (Optimized RANKX)
+//---------------------------------------------------
+
+Top 5 Flag =
+VAR ProductRank =
+    RANKX(
+        ALL('Chocolate Sales'[Product]),
+        [Total Sales],
+        ,
+        DESC
+    )
+RETURN
+    IF(ProductRank <= 5, "Yes", "No")
