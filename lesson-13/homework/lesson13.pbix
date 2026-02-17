@@ -1,0 +1,161 @@
+//------------------------------------
+// DATE TABLE
+//------------------------------------
+
+Date =
+ADDCOLUMNS(
+    CALENDARAUTO(),
+    "Year", YEAR([Date]),
+    "Month Number", MONTH([Date]),
+    "Month Name", FORMAT([Date], "MMMM"),
+    "Year-Month", FORMAT([Date], "YYYY-MM"),
+    "Quarter", "Q" & FORMAT([Date], "Q")
+)
+
+
+//------------------------------------
+// BASIC LEVEL
+//------------------------------------
+
+Total Sales =
+SUM('Chocolate Sales'[Sales Amount])
+
+
+Sales CY =
+CALCULATE(
+    [Total Sales],
+    YEAR('Date'[Date]) = YEAR(TODAY())
+)
+
+
+Sales LY =
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR('Date'[Date])
+)
+
+
+Sales Current Month =
+CALCULATE(
+    [Total Sales],
+    MONTH('Date'[Date]) = MONTH(TODAY()),
+    YEAR('Date'[Date]) = YEAR(TODAY())
+)
+
+
+Sales Current Quarter =
+CALCULATE(
+    [Total Sales],
+    'Date'[Year] = YEAR(TODAY()),
+    'Date'[Quarter] = "Q" & FORMAT(TODAY(), "Q")
+)
+
+
+//------------------------------------
+// INTERMEDIATE
+//------------------------------------
+
+YoY Growth % =
+DIVIDE(
+    [Total Sales] - [Sales LY],
+    [Sales LY]
+)
+
+
+Sales Last Month =
+CALCULATE(
+    [Total Sales],
+    PREVIOUSMONTH('Date'[Date])
+)
+
+
+Running Total =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL('Date'),
+        'Date'[Date] <= MAX('Date'[Date])
+    )
+)
+
+
+Sales Last 3 Months =
+CALCULATE(
+    [Total Sales],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -3,
+        MONTH
+    )
+)
+
+
+Highest Month Sales (Last 12M) =
+MAXX(
+    SUMMARIZE(
+        DATESINPERIOD(
+            'Date'[Date],
+            MAX('Date'[Date]),
+            -12,
+            MONTH
+        ),
+        'Date'[Year],
+        'Date'[Month Number],
+        "MonthlySales", [Total Sales]
+    ),
+    [MonthlySales]
+)
+
+
+//------------------------------------
+// ADVANCED
+//------------------------------------
+
+Q1 Sales =
+CALCULATE(
+    [Total Sales],
+    'Date'[Quarter] = "Q1"
+)
+
+
+YoY Difference December =
+CALCULATE(
+    [Total Sales] - [Sales LY],
+    'Date'[Month Number] = 12
+)
+
+
+Last 12 Months Sales =
+CALCULATE(
+    [Total Sales],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -12,
+        MONTH
+    )
+)
+
+
+Quarter Difference =
+VAR CurrentQ =
+    CALCULATE([Total Sales])
+VAR PrevQ =
+    CALCULATE(
+        [Total Sales],
+        PREVIOUSQUARTER('Date'[Date])
+    )
+RETURN
+    CurrentQ - PrevQ
+
+
+Month Exceeded 10% YoY Flag =
+VAR CurrentSales = [Total Sales]
+VAR LastYearSales = [Sales LY]
+RETURN
+    IF(
+        CurrentSales > LastYearSales * 1.1,
+        1,
+        0
+    )
