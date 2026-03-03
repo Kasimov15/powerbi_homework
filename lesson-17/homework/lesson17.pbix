@@ -1,0 +1,175 @@
+/* =====================================================
+   VISUAL003 – LESSON 17
+   Working with Maps & Geocoding, Formatting & Annotations
+   =====================================================
+
+Prerequisites:
+- Load sales_with_geodata.csv
+- Disable Auto DateTime
+- Ensure:
+    Country → Text
+    Region → Text
+    City → Text
+    Category → Text
+    Sales → Decimal
+    Latitude → Decimal
+    Longitude → Decimal
+    Date → Date
+*/
+
+
+/* =====================================================
+   DATE TABLE
+   ===================================================== */
+
+Geo Date Table =
+ADDCOLUMNS(
+    CALENDARAUTO(),
+    "Year", YEAR([Date]),
+    "Month Number", MONTH([Date]),
+    "Month Name", FORMAT([Date], "MMMM"),
+    "Year-Month", FORMAT([Date], "YYYY-MM")
+)
+
+/* Relationship:
+   Geo Date Table[Date] → sales_with_geodata[Date]
+*/
+
+
+/* =====================================================
+   PART 1 – MAPS & GEOCODING
+   ===================================================== */
+
+
+/* 1. TOTAL SALES */
+
+1_Total Sales =
+SUM('sales_with_geodata'[Sales])
+
+
+/* 2. SALES BY COUNTRY */
+
+2_Sales by Country =
+CALCULATE(
+    [1_Total Sales],
+    ALLEXCEPT(
+        'sales_with_geodata',
+        'sales_with_geodata'[Country]
+    )
+)
+
+
+/* 3. SALES BY REGION */
+
+3_Sales by Region =
+CALCULATE(
+    [1_Total Sales],
+    ALLEXCEPT(
+        'sales_with_geodata',
+        'sales_with_geodata'[Region]
+    )
+)
+
+
+/* 4. SALES BY CITY */
+
+4_Sales by City =
+CALCULATE(
+    [1_Total Sales],
+    ALLEXCEPT(
+        'sales_with_geodata',
+        'sales_with_geodata'[City]
+    )
+)
+
+
+/* 5. DRILL HIERARCHY
+   Create hierarchy:
+   Country → Region → City
+*/
+
+
+/* =====================================================
+   PART 2 – FORMATTING & ANNOTATIONS
+   ===================================================== */
+
+
+/* 6. CONDITIONAL COLOR LOGIC */
+
+6_Bubble Color Category =
+VAR x = [1_Total Sales]
+RETURN
+SWITCH(
+    TRUE(),
+    x > 1000000, "High",
+    x > 500000, "Medium",
+    "Low"
+)
+
+
+/* 7. CITY RANK */
+
+7_City Rank =
+RANKX(
+    ALL('sales_with_geodata'[City]),
+    [1_Total Sales],
+    ,
+    DESC
+)
+
+
+/* 8. TOP 5 CITY FLAG */
+
+8_Top 5 City Flag =
+IF([7_City Rank] <= 5, 1, 0)
+
+
+/* 9. TOOLTIP MEASURE */
+
+9_Tooltip Details =
+"Country: " & SELECTEDVALUE('sales_with_geodata'[Country]) &
+" | Region: " & SELECTEDVALUE('sales_with_geodata'[Region]) &
+" | City: " & SELECTEDVALUE('sales_with_geodata'[City]) &
+" | Sales: " & FORMAT([1_Total Sales], "#,##0")
+
+
+/* =====================================================
+   VISUAL CONFIGURATION
+   =====================================================
+
+1. Basic Map
+   Location → Country
+   Size → 2_Sales by Country
+
+2. Latitude Map
+   Latitude → Latitude
+   Longitude → Longitude
+   Size → 1_Total Sales
+   Legend → Category
+
+3. City Map
+   Location → City
+   Size → 4_Sales by City
+
+4. Shape Map
+   Location → Region
+   Color saturation → 3_Sales by Region
+
+5. Drill Mode
+   Use hierarchy: Country → Region → City
+
+6. Conditional Formatting
+   Data colors → Based on → 6_Bubble Color Category
+
+7. Annotation
+   Visual Filter → 8_Top 5 City Flag = 1
+
+8. Tooltip Page
+   Add Card → 1_Total Sales
+   Add Table → City, Category, Sales
+   Set page as Tooltip
+
+9. Slicer
+   Field → Category
+
+*/
