@@ -1,0 +1,221 @@
+/* =====================================================
+   VISUAL004 – LESSON 18
+   Visual Calculations
+   =====================================================
+
+Prerequisites:
+- Load sales_with_geodata.csv
+- Disable Auto DateTime
+- Ensure:
+    Product → Text
+    Category → Text
+    Country → Text
+    Region → Text
+    City → Text
+    Customer → Text
+    Sales → Decimal
+    Quantity → Whole Number
+    Discount per Unit → Decimal
+    Date → Date
+*/
+
+
+/* =====================================================
+   DATE TABLE
+   ===================================================== */
+
+Sales Date Table =
+ADDCOLUMNS(
+    CALENDARAUTO(),
+    "Year", YEAR([Date]),
+    "Month Number", MONTH([Date]),
+    "Month Name", FORMAT([Date], "MMMM"),
+    "Year-Month", FORMAT([Date], "YYYY-MM")
+)
+
+/* Relationship:
+   Sales Date Table[Date] → sales_with_geodata[Date]
+*/
+
+
+/* =====================================================
+   BASE MEASURES
+   ===================================================== */
+
+1_Total Sales =
+SUM('sales_with_geodata'[Sales])
+
+
+2_Total Quantity =
+SUM('sales_with_geodata'[Quantity])
+
+
+3_Total Orders =
+COUNTROWS('sales_with_geodata')
+
+
+/* =====================================================
+   PUZZLE 1 – CONFUSING TOTALS
+   ===================================================== */
+
+4_Sales per Unit (Wrong Total) =
+DIVIDE([1_Total Sales], [2_Total Quantity])
+
+
+5_Sales per Unit (Correct Total) =
+DIVIDE(
+    SUM('sales_with_geodata'[Sales]),
+    SUM('sales_with_geodata'[Quantity])
+)
+
+
+/* =====================================================
+   PUZZLE 2 – FILTERED VS UNFILTERED TOTALS
+   ===================================================== */
+
+6_Total Sales per Category =
+[1_Total Sales]
+
+
+7_Total Sales All Categories =
+CALCULATE(
+    [1_Total Sales],
+    ALL('sales_with_geodata'[Category])
+)
+
+
+8_% of Total =
+DIVIDE(
+    [6_Total Sales per Category],
+    [7_Total Sales All Categories]
+)
+
+
+/* =====================================================
+   PUZZLE 3 – SLICER CONTEXT
+   ===================================================== */
+
+9_Total Sales Ignore Country =
+CALCULATE(
+    [1_Total Sales],
+    ALL('sales_with_geodata'[Country])
+)
+
+
+/* =====================================================
+   PUZZLE 4 – MISLEADING AVERAGE
+   ===================================================== */
+
+10_Average Sales per Order (Incorrect) =
+DIVIDE([1_Total Sales], [3_Total Orders])
+
+
+11_Average Sales per Order (Correct) =
+AVERAGEX(
+    VALUES('sales_with_geodata'[Product]),
+    CALCULATE([1_Total Sales])
+)
+
+
+/* =====================================================
+   PUZZLE 5 – TOP PRODUCT PER CATEGORY
+   ===================================================== */
+
+12_Product Rank in Category =
+RANKX(
+    ALLEXCEPT(
+        'sales_with_geodata',
+        'sales_with_geodata'[Category]
+    ),
+    [1_Total Sales],
+    ,
+    DESC,
+    DENSE
+)
+
+
+13_Top Product Flag =
+IF([12_Product Rank in Category] = 1, 1, 0)
+
+
+/* =====================================================
+   PUZZLE 6 – SALES IN FRANCE
+   ===================================================== */
+
+14_Sales in France =
+CALCULATE(
+    [1_Total Sales],
+    'sales_with_geodata'[Country] = "France"
+)
+
+
+15_Sales in France (Fixed) =
+COALESCE([14_Sales in France], 0)
+
+
+/* =====================================================
+   PUZZLE 7 – PREVIOUS MONTH SALES
+   ===================================================== */
+
+16_Previous Month Sales =
+CALCULATE(
+    [1_Total Sales],
+    DATEADD('Sales Date Table'[Date], -1, MONTH)
+)
+
+
+17_Previous Month Sales (Safe) =
+CALCULATE(
+    [1_Total Sales],
+    PARALLELPERIOD('Sales Date Table'[Date], -1, MONTH)
+)
+
+
+/* =====================================================
+   PUZZLE 8 – ROW LEVEL CALCULATION
+   ===================================================== */
+
+18_Total Discount =
+SUMX(
+    'sales_with_geodata',
+    'sales_with_geodata'[Quantity] *
+    'sales_with_geodata'[Discount per Unit]
+)
+
+
+/* =====================================================
+   PUZZLE 9 – RANK WITH TIES
+   ===================================================== */
+
+19_City Rank Desc =
+RANKX(
+    ALL('sales_with_geodata'[City]),
+    [1_Total Sales],
+    ,
+    DESC,
+    DENSE
+)
+
+
+20_City Rank Asc =
+RANKX(
+    ALL('sales_with_geodata'[City]),
+    [1_Total Sales],
+    ,
+    ASC,
+    DENSE
+)
+
+
+/* =====================================================
+   PUZZLE 10 – DYNAMIC TITLE
+   ===================================================== */
+
+21_Dynamic Title =
+"Sales for " &
+SELECTEDVALUE(
+    'sales_with_geodata'[Country],
+    "All Countries"
+)
+
+*/
